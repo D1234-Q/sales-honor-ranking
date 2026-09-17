@@ -26,6 +26,22 @@
     @keyframes crownPulse{0%,100%{filter:brightness(1);box-shadow:0 0 25px rgba(255,193,60,.2),inset 0 0 30px rgba(255,213,87,.2)}50%{filter:brightness(1.08);box-shadow:0 0 38px rgba(255,193,60,.42),inset 0 0 34px rgba(255,213,87,.28)}}
     .mini-medal{ text-shadow:0 0 12px currentColor }
     @media(max-width:1400px){.slogan{display:none}.brand-values,.brand-divider{display:none}.topbar{grid-template-columns:250px 1fr 230px}}
+    .title h1{font-family:"Arial Black","Microsoft YaHei",sans-serif;font-weight:950;letter-spacing:.2em;-webkit-text-stroke:.55px rgba(255,220,140,.38);text-shadow:0 0 4px rgba(255,221,153,.65),0 0 22px rgba(255,173,61,.38)}
+    .logo-box{background:radial-gradient(ellipse,rgba(182,232,255,.34),transparent 70%);border-radius:12px}
+    .logo-box img{width:235px;height:68px;object-fit:contain;filter:brightness(1.78) contrast(.95) saturate(1.25) drop-shadow(0 0 9px rgba(80,213,255,.38))}
+    .footer-progress{grid-template-columns:180px 205px minmax(260px,1fr) 82px 118px;gap:12px;min-height:74px}
+    .footer-left{white-space:nowrap}
+    .sprint-body{grid-template-columns:minmax(0,1.55fr) minmax(180px,.8fr);padding:12px 14px 14px;gap:12px}
+    .sprint-main{padding:10px 8px 9px;border:1px solid rgba(84,220,255,.18);border-radius:10px;background:linear-gradient(145deg,rgba(16,68,101,.52),rgba(4,28,49,.62));box-shadow:inset 0 0 24px rgba(42,155,215,.08)}
+    .sprint-stat{padding:2px 12px}.sprint-stat label{font-size:10px}.sprint-stat strong{font-size:28px;text-shadow:0 0 12px rgba(255,207,91,.22)}
+    .goalbar{height:10px;margin:10px 12px 0;background:#1b3954}.sprint-side{border:1px solid rgba(84,220,255,.18);border-radius:10px;padding:10px 14px;background:rgba(3,28,48,.5);line-height:2.05}
+    @media(max-width:1600px) and (min-width:1201px){
+      .slogan{display:none}.topbar{grid-template-columns:300px 1fr 225px}
+      .podium-panel{flex:.93}.rank-panel{flex:1.48}.team-panel{flex:.58}
+      .rank-table th{padding:6px 8px;font-size:9px}.rank-table td{padding:5px 8px;font-size:11px}
+      .podium{padding:10px 18px 9px;gap:8px}.podium-card{min-height:155px;padding:10px 7px 9px}.podium-card.first{min-height:202px}.podium-avatar{width:56px;height:56px;margin:6px auto}.first .podium-avatar{width:70px;height:70px}.podium-name{font-size:17px}.podium-performance{font-size:23px}.first .podium-performance{font-size:29px}
+      .team-top3{padding-top:7px}.team-card{min-height:78px;padding-top:13px}.team-card.first{min-height:100px}
+    }
     @media(max-width:1200px){.board{height:auto;min-height:100vh;overflow:visible}.frame{height:auto}.content{flex:none}.podium-panel,.rank-panel,.team-panel,.mini-grid,.sprint,.today{flex:none}}
     @media(max-width:760px){.logo-box{flex-basis:180px}}
   </style>
@@ -57,13 +73,15 @@
     function enrich(data){return data.map(e=>{const score=Math.round(scoreOf(e));return {...e,score,tier:tierOf(score)}}).sort((a,b)=>b.score-a.score)}
     function formatWan(v){return v?`${(v/10000).toFixed(v%10000?1:0)}万`:'0万'}
     const avatar=e=>`<span class="mini-avatar">${e.avatar||e.name.slice(0,1)}</span>`;
+    const storeOf=e=>e.store||(['7组','5组','2组','4组','6组'].includes(e.group)?'西部智谷':'神州智慧');
+    const teamLabel=e=>e.name?`${storeOf(e)} · ${e.group}`:'战队';
     /* 左侧是全公司榜，右侧是部门战报；未来接 API 时可分别替换这两个数据源。 */
     const DEPARTMENT_GROUPS=['3组','7组'];
     let EMPLOYEES=loadEmployees(),rankings=enrich(EMPLOYEES),departmentRankings=enrich(EMPLOYEES.filter(e=>DEPARTMENT_GROUPS.includes(e.group)));
     const groupScores=()=>{const groups={};rankings.forEach(e=>groups[e.group]=(groups[e.group]||0)+e.score);return Object.entries(groups).sort((a,b)=>b[1]-a[1])};
-    function miniBoard(id,title,sub,list,unit){document.getElementById(id).innerHTML=`<div class="mini-head">${title}<small>${sub}</small></div><div class="mini-top3">${list.slice(0,3).map((e,i)=>`<div class="mini-person"><div class="mini-medal ${i===1?'silver':i===2?'bronze':''}">${i===0?'♛':i===1?'◆':'✦'}</div>${e.name?avatar(e):''}<b>${e.name||e[0]}</b><span>${e.group||'战队'}</span><strong>${unit(e)}</strong></div>`).join('')}</div>`}
-    function render(){const[first,second,third]=rankings;document.getElementById('rankCount').textContent=rankings.length;document.getElementById('podium').innerHTML=[second,first,third].map((e,i)=>`<article class="podium-card ${e===first?'first':i===0?'second':'third'}"><div class="podium-place">${e===first?'1':i===0?'2':'3'}</div><div class="podium-avatar">${e.avatar}</div><div class="podium-name">${e.name}</div><div class="podium-meta">${e.group}</div><div class="podium-performance">${formatWan(e.performance)} <small>业绩</small></div>${e===first?'<div class="champion">CHAMPION</div>':''}</article>`).join('');
-      document.getElementById('rankList').innerHTML=rankings.slice(3,10).map((e,i)=>{const prev=rankings[i+2];const growth=18+(e.score%51);return `<tr><td class="num">${String(i+4).padStart(2,'0')}</td><td>${avatar(e)}<span class="rank-name">${e.name}</span></td><td><span class="rank-sub">${e.group}</span></td><td class="score">${Math.round(e.performance/10000)}</td><td class="down">↓ ${formatWan(prev.performance-e.performance)}</td><td class="up">+${growth}%</td><td class="tier-text">${e.tier.name}</td></tr>`}).join('');
+    function miniBoard(id,title,sub,list,unit){document.getElementById(id).innerHTML=`<div class="mini-head">${title}<small>${sub}</small></div><div class="mini-top3">${list.slice(0,3).map((e,i)=>`<div class="mini-person"><div class="mini-medal ${i===1?'silver':i===2?'bronze':''}">${i===0?'♛':i===1?'◆':'✦'}</div>${e.name?avatar(e):''}<b>${e.name||e[0]}</b><span>${e.name?teamLabel(e):'战队'}</span><strong>${unit(e)}</strong></div>`).join('')}</div>`}
+    function render(){const[first,second,third]=rankings;document.getElementById('rankCount').textContent=rankings.length;document.getElementById('podium').innerHTML=[second,first,third].map((e,i)=>`<article class="podium-card ${e===first?'first':i===0?'second':'third'}"><div class="podium-place">${e===first?'1':i===0?'2':'3'}</div><div class="podium-avatar">${e.avatar}</div><div class="podium-name">${e.name}</div><div class="podium-meta">${teamLabel(e)}</div><div class="podium-performance">${formatWan(e.performance)} <small>业绩</small></div>${e===first?'<div class="champion">CHAMPION</div>':''}</article>`).join('');
+      document.getElementById('rankList').innerHTML=rankings.slice(3,10).map((e,i)=>{const prev=rankings[i+2];const growth=18+(e.score%51);return `<tr><td class="num">${String(i+4).padStart(2,'0')}</td><td>${avatar(e)}<span class="rank-name">${e.name}</span></td><td><span class="rank-sub">${teamLabel(e)}</span></td><td class="score">${Math.round(e.performance/10000)}</td><td class="down">↓ ${formatWan(prev.performance-e.performance)}</td><td class="up">+${growth}%</td><td class="tier-text">${e.tier.name}</td></tr>`}).join('');
       const teams=groupScores();document.getElementById('teamTop3').innerHTML=teams.slice(0,3).map((t,i)=>`<div class="team-card ${i===0?'first':''}"><div class="team-rank">${i+1}</div><div class="team-name">${t[0]}</div><div class="team-score">${Math.round(t[1])}<small> 分</small></div></div>`).join('');
       const perf=[...rankings].sort((a,b)=>b.performance-a.performance),view=[...rankings].sort((a,b)=>b.viewings-a.viewings),cust=[...rankings].sort((a,b)=>b.customers-a.customers);miniBoard('monthlyIndividual','9月个人销冠TOP3','MONTHLY INDIVIDUAL TOP3',perf,e=>formatWan(e.performance));miniBoard('monthlyViewing','9月带看TOP3','MONTHLY VIEWING TOP3',view,e=>`${e.viewings}组`);miniBoard('monthlyCustomer','9月收客TOP3','MONTHLY CUSTOMER TOP3',cust,e=>`${e.customers}组`);miniBoard('monthlyTeam','9月团队销冠TOP3','MONTHLY TEAM TOP3',teams,e=>`${Math.round(e[1])}分`);document.getElementById('currentDone').textContent='186万';document.getElementById('completionRate').textContent='62%';document.getElementById('todayCustomer').textContent='26 组';}
     function tick(){const now=new Date();document.getElementById('clockTime').textContent=now.toLocaleTimeString('zh-CN',{hour12:false});document.getElementById('clockDate').textContent=now.toLocaleDateString('zh-CN',{year:'numeric',month:'long',day:'numeric',weekday:'long'});}
